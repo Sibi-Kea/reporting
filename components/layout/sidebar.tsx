@@ -1,7 +1,8 @@
 "use client";
 
 import type { Role } from "@prisma/client";
-import { Church, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -23,11 +24,11 @@ export function Sidebar({ role, churchName }: SidebarProps) {
     <aside className="hidden h-screen w-[292px] shrink-0 flex-col border-r border-slate-200/80 bg-slate-50/70 p-4 lg:sticky lg:top-0 lg:flex">
       <div className="rounded-2xl bg-slate-900 p-4 text-white shadow-[0_20px_40px_-30px_rgba(15,23,42,0.95)]">
         <div className="flex items-center gap-3">
-          <span className="rounded-xl bg-white/15 p-2.5 text-sky-100">
-            <Church className="h-5 w-5" />
+          <span className="relative h-10 w-10 overflow-hidden rounded-xl border border-white/20 bg-white">
+            <Image src="/brand/crc-logo.svg" alt="CRC logo" fill sizes="40px" className="object-cover" priority />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">ChurchFlow ChMS</p>
+            <p className="truncate text-sm font-semibold">CRC Reporting</p>
             <p className="truncate text-xs text-slate-300">{churchName ?? "Multi-tenant workspace"}</p>
           </div>
         </div>

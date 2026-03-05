@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "ChurchFlow ChMS",
-    short_name: "ChurchFlow",
+    name: "CRC Reporting",
+    short_name: "CRC Reporting",
     description: "Enterprise-grade, multi-tenant Church Management System",
     start_url: "/",
     scope: "/",

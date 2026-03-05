@@ -1,7 +1,8 @@
 "use client";
 
 import type { Role } from "@prisma/client";
-import { Bell, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,10 +15,9 @@ type TopbarProps = {
   role: Role;
   name?: string | null;
   churchName?: string;
-  unreadNotifications: number;
 };
 
-export function Topbar({ role, name, churchName, unreadNotifications }: TopbarProps) {
+export function Topbar({ role, name, churchName }: TopbarProps) {
   const pathname = usePathname();
   const items = getNavItemsForRole(role);
   const activeItem =
@@ -32,20 +32,27 @@ export function Topbar({ role, name, churchName, unreadNotifications }: TopbarPr
   }).format(new Date());
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 px-3 py-3 backdrop-blur md:px-5 lg:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 px-3 py-2.5 backdrop-blur md:px-5 md:py-3 lg:px-8">
+      <div className="flex flex-wrap items-start justify-between gap-2 sm:items-center sm:gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold tracking-[0.14em] text-slate-500 uppercase">Operations Console</p>
+          <div className="flex items-center gap-2">
+            <span className="relative h-6 w-6 overflow-hidden rounded-md border border-slate-300 bg-white">
+              <Image src="/brand/crc-logo.svg" alt="CRC logo" fill sizes="24px" className="object-cover" priority />
+            </span>
+            <p className="truncate text-[11px] font-semibold tracking-[0.14em] text-slate-500 uppercase">
+              CRC Reporting
+            </p>
+          </div>
           <div className="mt-1 flex items-center gap-2">
             <h1 className="truncate text-lg font-semibold text-slate-900">{pageLabel}</h1>
             <Badge className="hidden sm:inline-flex">{toStartCase(role)}</Badge>
           </div>
           <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
             <span className="truncate">{churchName ?? "Multi-tenant workspace"}</span>
+            <span className="hidden text-slate-300 sm:inline">|</span>
+            <span className="hidden truncate sm:inline">Signed in as {name ?? "Church Leader"}</span>
             <span className="text-slate-300">|</span>
-            <span className="truncate">Signed in as {name ?? "Church Leader"}</span>
-            <span className="text-slate-300">|</span>
-            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap font-medium text-slate-600">
               <CalendarDays className="h-3.5 w-3.5" />
               {dateLabel}
             </span>
@@ -53,17 +60,6 @@ export function Topbar({ role, name, churchName, unreadNotifications }: TopbarPr
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <Link
-            href="/dashboard/notifications"
-            className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-          >
-            <Bell className="h-4 w-4" />
-            {unreadNotifications > 0 ? (
-              <span className="absolute -top-1 -right-1 min-w-5 rounded-full bg-red-600 px-1 text-center text-[10px] font-semibold text-white">
-                {unreadNotifications > 99 ? "99+" : unreadNotifications}
-              </span>
-            ) : null}
-          </Link>
           <SignOutButton />
         </div>
       </div>

@@ -26,7 +26,7 @@ export default async function LoginPage() {
             <div className="inline-flex rounded-xl bg-white/15 p-3">
               <Church className="h-7 w-7" />
             </div>
-            <h1 className="mt-6 text-3xl font-semibold">ChurchFlow ChMS</h1>
+            <h1 className="mt-6 text-3xl font-semibold">CRC Reporting</h1>
             <p className="mt-3 max-w-md text-sm text-white/85">
               Multi-tenant church management built for pastors and church admins. Clear workflows, fast screens, and secure data boundaries.
             </p>
@@ -47,9 +47,6 @@ export default async function LoginPage() {
           <p className="mt-2 text-sm text-slate-500">Use your church staff email and password.</p>
           <div className="mt-8">
             <LoginForm />
-          </div>
-          <div className="mt-8 rounded-xl bg-slate-50 p-3 text-xs text-slate-500">
-            Demo seed account: `superadmin@churchflow.com` / `Password123!`
           </div>
         </Card>
       </div>

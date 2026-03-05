@@ -19,14 +19,14 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "ChurchFlow ChMS",
+  title: "CRC Reporting",
   description: "Enterprise-grade, multi-tenant Church Management System",
-  applicationName: "ChurchFlow ChMS",
+  applicationName: "CRC Reporting",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "ChurchFlow ChMS",
+    title: "CRC Reporting",
   },
   icons: {
     icon: [

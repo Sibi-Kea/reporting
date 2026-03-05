@@ -17,7 +17,10 @@ export function PwaProvider() {
             const cacheNames = await caches.keys();
             await Promise.all(
               cacheNames
-                .filter((cacheName) => cacheName.startsWith("churchflow-pwa-"))
+                .filter(
+                  (cacheName) =>
+                    cacheName.startsWith("churchflow-pwa-") || cacheName.startsWith("crc-reporting-pwa-"),
+                )
                 .map((cacheName) => caches.delete(cacheName)),
             );
           }

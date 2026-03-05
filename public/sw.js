@@ -1,4 +1,4 @@
-const CACHE_NAME = "churchflow-pwa-v1";
+const CACHE_NAME = "crc-reporting-pwa-v1";
 const STATIC_CACHE_URLS = ["/offline.html", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/favicon.ico"];
 
 self.addEventListener("install", (event) => {

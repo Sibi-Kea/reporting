@@ -202,7 +202,7 @@ async function resolveAssigneeUser(params: {
   });
   if (!member) return { error: "Selected member is invalid." as const };
 
-  const generatedEmail = `member.${member.id.slice(-10)}@churchflow.local`;
+  const generatedEmail = `member.${member.id.slice(-10)}@crc-reporting.local`;
   const memberEmail = (member.email?.trim().toLowerCase() || generatedEmail).toLowerCase();
 
   const existingUser = await db.user.findUnique({
