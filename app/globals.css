@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eef3f9;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --surface: #ffffff;
+  --ring: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-manrope);
+  --font-heading: var(--font-plus-jakarta);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background:
+    linear-gradient(160deg, #eef3f9 0%, #f7fafd 48%, #edf3f8 100%);
+  color: var(--foreground);
+  font-family: var(--font-manrope), sans-serif;
+  min-height: 100vh;
+}
+
+.app-gradient {
+  background-image:
+    radial-gradient(1000px 520px at 0% 0%, rgb(14 165 233 / 16%), transparent),
+    radial-gradient(900px 520px at 100% 0%, rgb(16 185 129 / 10%), transparent),
+    radial-gradient(1000px 540px at 50% 100%, rgb(148 163 184 / 15%), transparent);
+}
+
+.page-enter {
+  animation: page-enter 0.28s ease-out;
+}
+
+::selection {
+  background: rgb(14 165 233 / 25%);
+  color: #082f49;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

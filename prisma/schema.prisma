@@ -1,0 +1,600 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Church {
+  id                  String               @id @default(cuid())
+  name                String
+  slug                String               @unique
+  email               String?
+  phone               String?
+  address             String?
+  pastorId            String?              @unique
+  createdById         String?
+  attendanceServiceLabels String[]         @default(["North AM1", "South AM", "South AM2", "South PM"])
+  attendanceMorningServiceLabels String[]  @default(["North AM1", "South AM", "South AM2"])
+  attendanceEveningServiceLabels String[]  @default(["South PM"])
+  attendanceOnlineServiceLabels String[]   @default([])
+  isActive            Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  attendanceItems     AttendanceEntry[]
+  attendance          AttendanceRecord[]
+  leaderAttendanceReports LeaderAttendanceSelfReport[]
+  auditLogs           AuditLog[]
+  createdBy           User?                @relation("ChurchCreatedBy", fields: [createdById], references: [id])
+  pastor              User?                @relation("ChurchPastor", fields: [pastorId], references: [id])
+  departments         Department[]
+  financeTransactions FinanceTransaction[]
+  homecells           Homecell[]
+  homecellReports     HomecellReport[]
+  homecellReportItems HomecellReportItem[]
+  members             Member[]
+  ltvSnapshots        MemberLtvStatus[]
+  memberNotes         MemberNote[]
+  notifications       Notification[]
+  regions             Region[]
+  services            Service[]
+  structureLeaders    StructureLeader[]
+  users               User[]               @relation("ChurchStaff")
+  visitors            Visitor[]
+  zones               Zone[]
+}
+
+model User {
+  id                       String               @id @default(cuid())
+  name                     String
+  email                    String               @unique
+  emailVerified            DateTime?
+  image                    String?
+  phone                    String?
+  passwordHash             String?
+  role                     Role
+  churchId                 String?
+  isActive                 Boolean              @default(true)
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  accounts                 Account[]
+  attendanceMarked         AttendanceRecord[]   @relation("AttendanceMarkedBy")
+  attendanceSelfReports    LeaderAttendanceSelfReport[] @relation("LeaderAttendanceReporter")
+  auditLogs                AuditLog[]
+  createdChurches          Church[]             @relation("ChurchCreatedBy")
+  pastoredChurch           Church?              @relation("ChurchPastor")
+  ledDepartments           Department[]         @relation("DepartmentLeader")
+  financeCaptured          FinanceTransaction[] @relation("FinanceCapturedBy")
+  ledHomecell              Homecell?            @relation("HomecellLeader")
+  homecellReportsSubmitted HomecellReport[]     @relation("ReportSubmittedBy")
+  memberNotes              MemberNote[]
+  notifications            Notification[]
+  ledRegion                Region?              @relation("RegionLeader")
+  createdServices          Service[]            @relation("ServiceCreatedBy")
+  sessions                 Session[]
+  structureLeaderships     StructureLeader[]    @relation("StructureLeaderUser")
+  church                   Church?              @relation("ChurchStaff", fields: [churchId], references: [id])
+  ledZone                  Zone?                @relation("ZoneLeader")
+
+  @@index([churchId, role])
+}
+
+model Region {
+  id        String     @id @default(cuid())
+  churchId  String
+  name      String
+  leaderId  String?    @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  homecells Homecell[]
+  members   Member[]
+  church    Church     @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  leader    User?      @relation("RegionLeader", fields: [leaderId], references: [id])
+  structureLeaders StructureLeader[]
+  zones     Zone[]
+
+  @@unique([churchId, name])
+  @@index([churchId])
+}
+
+model Zone {
+  id        String     @id @default(cuid())
+  churchId  String
+  regionId  String?
+  name      String
+  leaderId  String?    @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  homecells Homecell[]
+  members   Member[]
+  church    Church     @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  leader    User?      @relation("ZoneLeader", fields: [leaderId], references: [id])
+  region    Region?    @relation(fields: [regionId], references: [id])
+  structureLeaders StructureLeader[]
+
+  @@unique([churchId, name])
+  @@index([churchId])
+  @@index([regionId])
+}
+
+model Homecell {
+  id          String           @id @default(cuid())
+  churchId    String
+  regionId    String?
+  zoneId      String?
+  name        String
+  leaderId    String?          @unique
+  meetingDay  String?
+  meetingTime String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  church      Church           @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  leader      User?            @relation("HomecellLeader", fields: [leaderId], references: [id])
+  region      Region?          @relation(fields: [regionId], references: [id])
+  zone        Zone?            @relation(fields: [zoneId], references: [id])
+  reports     HomecellReport[]
+  structureLeaders StructureLeader[]
+  members     Member[]
+
+  @@unique([churchId, name])
+  @@index([churchId])
+  @@index([regionId])
+  @@index([zoneId])
+}
+
+model StructureLeader {
+  id             String            @id @default(cuid())
+  churchId       String
+  regionId       String?
+  zoneId         String?
+  homecellId     String?
+  userId         String
+  role           Role
+  parentLeaderId String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  church         Church            @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  region         Region?           @relation(fields: [regionId], references: [id])
+  zone           Zone?             @relation(fields: [zoneId], references: [id])
+  homecell       Homecell?         @relation(fields: [homecellId], references: [id])
+  user           User              @relation("StructureLeaderUser", fields: [userId], references: [id], onDelete: Cascade)
+  parentLeader   StructureLeader?  @relation("StructureLeaderTree", fields: [parentLeaderId], references: [id], onDelete: SetNull)
+  childLeaders   StructureLeader[] @relation("StructureLeaderTree")
+
+  @@index([churchId, role])
+  @@index([churchId, regionId])
+  @@index([churchId, zoneId])
+  @@index([churchId, homecellId])
+  @@index([parentLeaderId])
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  churchId  String
+  name      String
+  leaderId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  leader    User?    @relation("DepartmentLeader", fields: [leaderId], references: [id])
+  members   Member[]
+
+  @@unique([churchId, name])
+  @@index([churchId])
+}
+
+model Member {
+  id                    String               @id @default(cuid())
+  churchId              String
+  regionId              String?
+  zoneId                String?
+  homecellId            String?
+  departmentId          String?
+  firstName             String
+  lastName              String
+  gender                Gender
+  dateOfBirth           DateTime?
+  phone                 String?
+  email                 String?
+  address               String?
+  maritalStatus         MaritalStatus?
+  occupation            String?
+  dateJoined            DateTime
+  salvationStatus       Boolean              @default(false)
+  baptismStatus         Boolean              @default(false)
+  holySpiritBaptismStatus Boolean            @default(false)
+  jimJohn316Status      Boolean              @default(false)
+  jimSgtStatus          Boolean              @default(false)
+  jimDiscStatus         Boolean              @default(false)
+  jimNltStatus          Boolean              @default(false)
+  involvementNotes      String?
+  membershipStatus      MembershipStatus     @default(ACTIVE)
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  profilePhotoUrl       String?
+  isDeleted             Boolean              @default(false)
+  deletedAt             DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  attendanceEntries     AttendanceEntry[]
+  financeTransactions   FinanceTransaction[]
+  homecellReportItems   HomecellReportItem[]
+  church                Church               @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  department            Department?          @relation(fields: [departmentId], references: [id])
+  homecell              Homecell?            @relation(fields: [homecellId], references: [id])
+  region                Region?              @relation(fields: [regionId], references: [id])
+  zone                  Zone?                @relation(fields: [zoneId], references: [id])
+  ltvStatuses           MemberLtvStatus[]
+  notes                 MemberNote[]
+  convertedVisitors     Visitor[]            @relation("ConvertedMember")
+
+  @@index([churchId, lastName, firstName])
+  @@index([churchId, phone])
+  @@index([churchId, email])
+  @@index([churchId, membershipStatus, isDeleted])
+  @@index([homecellId])
+  @@index([departmentId])
+}
+
+model MemberNote {
+  id        String   @id @default(cuid())
+  churchId  String
+  memberId  String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([churchId, memberId])
+}
+
+model Service {
+  id                  String               @id @default(cuid())
+  churchId            String
+  title               String
+  serviceType         ServiceType
+  eventDate           DateTime
+  createdById         String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  attendance          AttendanceRecord[]
+  leaderAttendanceReports LeaderAttendanceSelfReport[]
+  financeTransactions FinanceTransaction[]
+  church              Church               @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  createdBy           User                 @relation("ServiceCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([churchId, eventDate])
+}
+
+model AttendanceRecord {
+  id         String            @id @default(cuid())
+  churchId   String
+  serviceId  String
+  markedById String
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  entries    AttendanceEntry[]
+  church     Church            @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  markedBy   User              @relation("AttendanceMarkedBy", fields: [markedById], references: [id], onDelete: Cascade)
+  service    Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([churchId, serviceId])
+  @@index([churchId, createdAt])
+}
+
+model AttendanceEntry {
+  id           String           @id @default(cuid())
+  churchId     String
+  attendanceId String
+  memberId     String
+  status       AttendanceStatus
+  absentReason String?
+  absentNote   String?
+  createdAt    DateTime         @default(now())
+  attendance   AttendanceRecord @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  church       Church           @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  member       Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([attendanceId, memberId])
+  @@index([churchId, status])
+  @@index([memberId])
+}
+
+model LeaderAttendanceSelfReport {
+  id             String           @id @default(cuid())
+  churchId       String
+  serviceId      String
+  reporterUserId String
+  reporterRole   Role
+  status         AttendanceStatus
+  note           String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  church         Church           @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  service        Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  reporter       User             @relation("LeaderAttendanceReporter", fields: [reporterUserId], references: [id], onDelete: Cascade)
+
+  @@unique([churchId, serviceId, reporterUserId])
+  @@index([churchId, reporterRole, createdAt])
+}
+
+model HomecellReport {
+  id                String               @id @default(cuid())
+  churchId          String
+  homecellId        String
+  submittedById     String
+  weekStartDate     DateTime
+  weekEndDate       DateTime
+  totalMembers      Int
+  membersPresent    Int
+  membersAbsent     Int
+  visitors          Int                  @default(0)
+  firstTimeVisitors Int                  @default(0)
+  visitorItems      Json                 @default("[]")
+  firstTimeVisitorItems Json             @default("[]")
+  salvationItems    Json                 @default("[]")
+  prayerRequests    String?
+  offeringCollected Decimal?             @db.Decimal(12, 2)
+  isLocked          Boolean              @default(true)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  church            Church               @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  homecell          Homecell             @relation(fields: [homecellId], references: [id], onDelete: Cascade)
+  submittedBy       User                 @relation("ReportSubmittedBy", fields: [submittedById], references: [id], onDelete: Cascade)
+  memberItems       HomecellReportItem[]
+
+  @@unique([churchId, homecellId, weekStartDate])
+  @@index([churchId, submittedById])
+  @@index([churchId, weekStartDate])
+}
+
+model HomecellReportItem {
+  id            String         @id @default(cuid())
+  churchId      String
+  reportId      String
+  memberId      String?
+  memberName    String
+  present       Boolean
+  absenceReason String?
+  absenceNote   String?
+  homecellPresent      Boolean   @default(true)
+  homecellAbsenceReason String?
+  homecellAbsenceNote   String?
+  churchPresent         Boolean   @default(true)
+  churchAttendedLabels  String[]  @default([])
+  churchAbsenceReason   String?
+  churchAbsenceNote     String?
+  churchMorningPresent       Boolean  @default(true)
+  churchMorningAttendedLabel String?
+  churchMorningAbsenceReason String?
+  churchMorningAbsenceNote   String?
+  churchEveningPresent       Boolean  @default(true)
+  churchEveningAttendedLabel String?
+  churchEveningAbsenceReason String?
+  churchEveningAbsenceNote   String?
+  church        Church         @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  member        Member?        @relation(fields: [memberId], references: [id])
+  report        HomecellReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([churchId, reportId])
+}
+
+model Visitor {
+  id                String         @id @default(cuid())
+  churchId          String
+  firstName         String
+  lastName          String?
+  phone             String
+  invitedBy         String?
+  firstTime         Boolean        @default(true)
+  firstVisitDate    DateTime
+  followUpStatus    FollowUpStatus @default(PENDING)
+  convertedToMember Boolean        @default(false)
+  convertedMemberId String?
+  notes             String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  church            Church         @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  convertedMember   Member?        @relation("ConvertedMember", fields: [convertedMemberId], references: [id])
+
+  @@index([churchId, followUpStatus])
+  @@index([churchId, firstTime])
+  @@index([churchId, convertedToMember])
+}
+
+model FinanceTransaction {
+  id              String        @id @default(cuid())
+  churchId        String
+  memberId        String?
+  serviceId       String?
+  capturedById    String
+  financeType     FinanceType
+  amount          Decimal       @db.Decimal(12, 2)
+  paymentMethod   PaymentMethod
+  transactionDate DateTime
+  note            String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  capturedBy      User          @relation("FinanceCapturedBy", fields: [capturedById], references: [id], onDelete: Cascade)
+  church          Church        @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  member          Member?       @relation(fields: [memberId], references: [id])
+  service         Service?      @relation(fields: [serviceId], references: [id])
+
+  @@index([churchId, transactionDate])
+  @@index([churchId, financeType])
+  @@index([churchId, memberId])
+}
+
+model MemberLtvStatus {
+  id             String   @id @default(cuid())
+  churchId       String
+  memberId       String
+  monthStartDate DateTime
+  isLeader       Boolean  @default(false)
+  isTither       Boolean  @default(false)
+  isVolunteer    Boolean  @default(false)
+  attendanceRate Float    @default(0)
+  badgeCount     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  church         Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  member         Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([churchId, memberId, monthStartDate])
+  @@index([churchId, monthStartDate])
+}
+
+model Notification {
+  id           String           @id @default(cuid())
+  churchId     String
+  userId       String
+  type         NotificationType
+  title        String
+  message      String
+  actionUrl    String?
+  isRead       Boolean          @default(false)
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  church       Church           @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([churchId, isRead])
+  @@index([userId, isRead])
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  churchId    String?
+  actorUserId String
+  actorRole   Role
+  action      AuditAction
+  entity      String
+  entityId    String?
+  payload     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+  actor       User        @relation(fields: [actorUserId], references: [id], onDelete: Cascade)
+  church      Church?     @relation(fields: [churchId], references: [id])
+
+  @@index([churchId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum Role {
+  SUPER_ADMIN
+  PASTOR
+  OVERSEER
+  SUPERVISOR
+  COORDINATOR
+  HOMECELL_LEADER
+  CHURCH_ADMIN
+  FINANCE_ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+  VISITOR
+}
+
+enum ServiceType {
+  SUNDAY
+  MIDWEEK
+  SPECIAL
+  CUSTOM
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  ONLINE
+}
+
+enum FinanceType {
+  TITHE
+  OFFERING
+  DONATION
+  SPECIAL_SEED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  ONLINE
+}
+
+enum FollowUpStatus {
+  PENDING
+  CONTACTED
+  SCHEDULED
+  COMPLETED
+}
+
+enum NotificationType {
+  REMINDER
+  ALERT
+  SYSTEM
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  EXPORT
+  LOGIN
+}
